@@ -1,0 +1,12 @@
+# Allow non-root users start Nimbus builds and manage service with sudo.
+
+# {{ light_client_service_name }}
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *status {{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *start {{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *stop {{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *restart {{ light_client_service_name }}*
+# update-{{ light_client_service_name }}
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *status update-{{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *start update-{{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *stop update-{{ light_client_service_name }}*
+%{{ light_client_group }} ALL= NOPASSWD: /usr/bin/systemctl *restart update-{{ light_client_service_name }}*

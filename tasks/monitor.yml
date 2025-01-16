@@ -1,0 +1,13 @@
+---
+- name: Create monitor service file
+  template:
+    src: 'monitor.service.j2'
+    dest: '/etc/systemd/system/{{ light_client_consul_monitor_name }}.service'
+    mode: 0644
+  register: light_client_service_definition
+
+- name: Enable monitor service
+  systemd:
+    name: '{{ light_client_consul_monitor_name }}.service'
+    enabled: true
+    daemon_reload: true

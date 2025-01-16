@@ -1,0 +1,20 @@
+[Unit]
+Description=Nimbus Light Client on {{ light_client_network }} network ({{ light_client_repo_branch }})
+Documentation=https://github.com/status-im/infra-role-nimbus-light-client
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User={{ light_client_user }}
+Group={{ light_client_group }}
+LimitNOFILE={{ light_client_service_nofile_limit }}
+WorkingDirectory={{ light_client_service_path }}
+SyslogIdentifier={{ light_client_service_name }}
+SyslogFacility=local6
+SyslogLevel=debug
+Restart=on-failure
+ExecStart={{ light_client_binary_path }} \
+    --config-file={{ light_client_config_file_path }}
+
+[Install]
+WantedBy=multi-user.target

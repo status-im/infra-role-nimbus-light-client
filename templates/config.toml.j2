@@ -1,0 +1,22 @@
+# Hostname: {{ dns_entry }}
+
+## WARNING: Do not put sensitive configuration here. Use service definition.
+
+### General
+network = {{ light_client_network | to_json }}
+bootstrap-node = [
+    {{ bootstrap_node.json.data.enr | to_json }}
+]
+trusted-block-root = {{ trusted_block_root.json.data.root | to_json }}
+
+### Logs
+log-format = {{ light_client_log_format | to_json }}
+log-level = {{ light_client_log_level | to_json }}
+
+### Network
+nat = "extip:{{ light_client_public_address }}"
+tcp-port = {{ light_client_listening_port }}
+udp-port = {{ light_client_discovery_port }}
+max-peers = {{ light_client_max_peers }}
+
+### Extra Flags

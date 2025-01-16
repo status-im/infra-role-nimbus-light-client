@@ -1,0 +1,28 @@
+---
+- name: Symlink service logs folder
+  file:
+    src: '/var/log/service/{{ light_client_service_name }}'
+    dest: '{{ light_client_logs_link }}'
+    state: 'link'
+    force: true
+
+- name: Create systemd Unit file
+  template:
+    src: 'light-client.service.j2'
+    dest: '/etc/systemd/system/{{ light_client_service_name }}.service'
+    mode: 0644
+  register: light_client_service_definition
+
+- name: Reload and restart the service
+  systemd_service:
+    name: '{{ light_client_service_name }}.service'
+    enabled: true
+    daemon_reload: true
+    state: |-
+      {{ (
+        light_client_service_allow_restart
+      and (
+        light_client_config_file.changed or
+        light_client_service_definition.changed or
+        light_client_service_force_restart
+      )) | ternary("restarted", "started") }}

@@ -1,0 +1,18 @@
+[Unit]
+Description=Monitor for {{ light_client_service_name }} that updates Consul
+Documentation=https://github.com/status-im/infra-role-beacon-node-linux
+Requires=consul.service
+After=consul.service
+
+[Service]
+User={{ light_client_consul_monitor_user }}
+WorkingDirectory={{ light_client_service_path }}
+Restart=on-failure
+ExecStart={{ light_client_service_path }}/monitor.sh
+
+# Security
+ReadOnlyPaths=/
+ReadWritePaths=/etc/consul /tmp
+
+[Install]
+WantedBy=multi-user.target

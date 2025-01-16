@@ -1,0 +1,39 @@
+---
+- name: Create service directories
+  file:
+    path:  '{{ item.path }}'
+    owner: '{{ light_client_user }}'
+    group: '{{ light_client_group }}'
+    state: 'directory'
+    mode:  '{{ item.mode }}'
+  with_items:
+    - { path: '{{ light_client_service_path }}',    mode: '0750' }
+    - { path: '{{ light_client_config_dir }}',      mode: '0755' }
+    - { path: '{{ light_client_bin_path }}',        mode: '0755' }
+
+- name: Copy Ansible toggle script
+  copy:
+    src:     'ansible_toggle.sh'
+    dest:    '{{ light_client_service_path }}/ansible_enabled.sh'
+    owner:   '{{ light_client_user }}'
+    group:   '{{ light_client_group }}'
+    mode:    0750
+
+- name: Create helper scripts
+  template:
+    src:     '{{ item }}'
+    dest:    '{{ light_client_service_path }}/{{ item|basename|replace(".j2", "") }}'
+    owner:   '{{ light_client_user }}'
+    group:   '{{ light_client_group }}'
+    mode:    0775
+  with_fileglob:
+    - 'templates/scripts/*'
+
+- name: Create node config
+  template:
+    src:     'config.toml.j2'
+    dest:    '{{ light_client_config_file_path }}'
+    owner:   '{{ light_client_user }}'
+    group:   '{{ light_client_group }}'
+    mode:    0664
+  register: light_client_config_file
