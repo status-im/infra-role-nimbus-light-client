@@ -1,0 +1,36 @@
+---
+- block:
+    - name: 'Check if local beacon node is running'
+      wait_for:
+        port: '{{ local_beacon_node_rest_port }}'
+        timeout: 5
+      register: local_beacon_check
+
+    - name: 'Query local REST API for bootstrap node ENR'
+      uri:
+        url: 'http://localhost:{{ local_beacon_node_rest_port }}/eth/v1/node/identity'
+        status_code: 200
+        body_format: json
+      register: bootstrap_node
+
+    - name: 'Query local REST API for finalized block header'
+      uri:
+        url: 'http://localhost:{{ local_beacon_node_rest_port }}/eth/v1/beacon/headers/finalized'
+        status_code: 200
+        body_format: json
+      register: trusted_block_root
+
+  rescue:
+    - name: 'Query public REST API for bootstrap node ENR'
+      uri:
+        url: '{{ beacon_node_public_api }}/eth/v1/node/identity'
+        status_code: 200
+        body_format: json
+      register: bootstrap_node
+
+    - name: 'Query public REST API for finalized block header'
+      uri:
+        url: '{{ beacon_node_public_api }}/eth/v1/beacon/headers/finalized'
+        status_code: 200
+        body_format: json
+      register: trusted_block_root

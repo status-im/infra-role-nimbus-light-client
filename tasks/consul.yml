@@ -1,0 +1,23 @@
+---
+- name: 'Create Consul service definition'
+  include_role: name=infra-role-consul-service
+  vars:
+    consul_config_name:                      '{{ light_client_consul_service_file_name }}'
+    consul_default_check_disabled:           '{{ light_client_consul_check_disabled }}'
+    consul_default_check_interval:           '{{ light_client_consul_check_interval }}'
+    consul_default_check_timeout:            '{{ light_client_consul_check_timeout }}'
+    consul_default_success_before_passing:   '{{ light_client_consul_success_before_passing }}'
+    consul_default_failures_before_warning:  '{{ light_client_consul_failures_before_warning }}'
+    consul_default_failures_before_critical: '{{ light_client_consul_failures_before_critical }}'
+    consul_services:
+      - id:   '{{ light_client_service_name }}'
+        name: '{{ light_client_consul_service_name }}'
+        port: '{{ light_client_listening_port }}'
+        address: '{{ light_client_public_address }}'
+        tags: ['{{ env }}.{{ stage }}', 'light-client', 'nimbus']
+        meta:
+          timestamp: '{{ ansible_date_time.iso8601 }}'
+        checks:
+          - id:   '{{ light_client_service_name }}-health'
+            type: 'tcp'
+            tcp: 'localhost:{{ light_client_listening_port }}'

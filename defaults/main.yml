@@ -1,0 +1,79 @@
+---
+light_client_service_name: 'nimbus-light-client-{{ light_client_network }}-{{ light_client_repo_branch }}'
+light_client_service_path: '/data/{{ light_client_service_name }}'
+
+light_client_config_dir: '{{ light_client_service_path }}/conf'
+light_client_config_file_path: '{{ light_client_config_dir }}/config.toml'
+light_client_repo_path: '{{ light_client_service_path }}/repo'
+light_client_bin_path: '{{ light_client_service_path }}/bin'
+light_client_logs_link: '{{ light_client_service_path }}/logs'
+light_client_binary_path: '{{ light_client_bin_path }}/nimbus_light_client'
+
+# Ability to prevernt restarts after service changes.
+# This is higher priority, than force_restart.
+light_client_service_allow_restart: true
+# Force restart service on each ansible playbook run
+light_client_service_force_restart: false
+
+# Should be: nextPowerOfTwo(number_of_validators + 1024)
+light_client_service_nofile_limit: 16384
+light_client_user: 'nimbus'
+light_client_group: 'staff'
+
+light_client_build_timer_name: 'build-{{ light_client_service_name }}'
+light_client_build_timer_enabled: true
+light_client_build_timer_timeout: 3600
+light_client_build_frequency: 'weekly'
+light_client_build_restarts_service: false # avoid on the first run
+
+# Update with Build method
+light_client_build_script: '{{ light_client_service_path }}/build.sh'
+light_client_update_build_targets: ['nimbus_light_client']
+light_client_build_days_kept: 3
+light_client_update_build_jobs: '{{ ansible_processor_vcpus / 2 | round(0, "ceil") }}'
+light_client_update_build_log_level: 'INFO'
+light_client_update_build_nim_flags: >-
+  -d:noSignalHandler
+
+light_client_repo_url: 'https://github.com/status-im/nimbus-eth2'
+light_client_repo_branch: 'unstable'
+beacon_node_public_api: 'http://unstable.{{ light_client_network }}.beacon-api.nimbus.team'
+
+light_client_network: 'holesky'
+light_client_log_level: 'INFO' # TRACE DEBUG INFO NOTICE WARN ERROR FATAL NONE
+light_client_log_format: 'json' # auto colors nocolors json none
+light_client_extra_flags: {} # {agent-string: 'Taxation is theft.'}
+
+# For validation
+light_client_valid_network_names: ["mainnet", "prater", "sepolia", "holesky"]
+
+# connectivity settings
+light_client_public_address: '{{ ansible_host }}'
+light_client_max_peers: 160
+light_client_discovery_port: 9503
+light_client_listening_port: 9503
+
+# REST API
+local_beacon_node_rest_port: 9303
+
+# Consul service definition settings
+light_client_consul_service_name: 'nimbus-light-client'
+light_client_consul_service_file_name: '{{ light_client_service_name | replace("-", "_") }}'
+light_client_consul_metrics_service_name: '{{ light_client_consul_service_name }}-metrics'
+light_client_consul_check_disabled: false
+light_client_consul_check_interval: '60s'
+light_client_consul_check_timeout: '5s'
+light_client_consul_success_before_passing: 0
+light_client_consul_failures_before_warning: 1
+light_client_consul_failures_before_critical: 2
+# Monitor for updating Consul metadata
+# light_client_consul_monitor_enabled: false
+# light_client_consul_monitor_name: 'monitor-{{ light_client_service_name }}'
+# light_client_consul_monitor_user: 'root'
+
+# Netkey file contents, optional.
+#light_client_netkey: '{"key":"json"}'
+
+# Which version of Nim to use for the build
+# By default, it would use the one specified by the pinned nimbus-build-system
+light_client_nim_commit: ''

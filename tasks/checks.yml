@@ -1,0 +1,22 @@
+---
+- name: Verify network name
+  assert:
+    that: '{{ light_client_network in light_client_valid_network_names }}'
+    quiet: true
+
+# Used by devs who make manual changes to node setup.
+- name: Check Ansible toggle script
+  stat:
+    path: '{{ light_client_service_path }}/ansible_disabled.sh'
+  register: light_client_ansible_toggle
+
+- name: Check if Ansible updates are disabled
+  set_fact:
+    light_client_ansible_disabled: '{{ light_client_ansible_toggle.stat.exists }}'
+
+# Using 'fail' task to make the warning red and visible.
+- name: 'WARNING: {{ light_client_service_name }}'
+  fail:
+    msg: 'WARNING: Ansible changes disabled due to toggle script!'
+  when: light_client_ansible_disabled
+  ignore_errors: true

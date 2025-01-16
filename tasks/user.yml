@@ -1,0 +1,25 @@
+---
+- name: Create user for light client builds
+  user:
+    name: '{{ light_client_user }}'
+    group: '{{ light_client_group }}'
+    shell: '/bin/bash'
+
+- name: Set disable rebase as merge strategy
+  git_config:
+    scope: 'global'
+    name: 'pull.rebase'
+    value: 'false'
+  become_user: '{{ light_client_user }}'
+
+- name: Sudoers file to let non-root users start jobs
+  template:
+    src: 'update_sudoers.j2'
+    dest: '/etc/sudoers.d/80-update-{{ light_client_service_name }}'
+    mode: 0440
+
+- name: Sudoers file for login as nimbus user
+  template:
+    src: 'nimbus_sudoers.j2'
+    dest: '/etc/sudoers.d/81-{{ light_client_service_name }}-login'
+    mode: 0440

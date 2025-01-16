@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# vim: ft=sh
+set -e
+
+function fetchMetrics() {
+    curl -sSf "http://${METRICS_ADDR}/metrics"
+}
+
+function getNextActionWait() {
+    fetchMetrics | awk -F'[ .]' '/^next_action_wait /{print $2}'
+}
+
+# Returns seconds or 'inf' (longer than 10 min)
+function getNextProposalWait() {
+    fetchMetrics | awk -F'[ .]' '/^next_proposal_wait /{print $2}'
+}
+
+function dots() {
+    printf '%0.s.' $(seq 0 "${1}")
+}
+
+while :
+do
+  case "$1" in
+    --seconds-required|-s)
+      if [ -z "${2}" ]; then
+        echo 2>&1 "Error: --seconds-required|-s missing argument" >&2
+        exit 1
+      fi
+      SECONDS_REQUIRED="${2}"
+      shift 2
+      ;;
+    --wait-action|-a)
+      if [ -z "${2}" ]; then
+        echo 2>&1 "Error: --wait-action|-a missing argument" >&2
+        exit 1
+      fi
+      WAIT_ACTION="${2}"
+      shift 2
+      ;;
+    --) # End of all options
+      shift
+      break;
+      ;;
+    -*)
+      echo 2>&1 "Error: Unknown option: ${1}" >&2
+      exit 1
+      ;;
+    *)  # No more options
+      break
+      ;;
+  esac
+done
+
+SERVICE='{{ light_client_service_name }}.service'
+INTERVAL_SECONDS=1
+SECONDS_REQUIRED="${SECONDS_REQUIRED:-60}"
+WAIT_ACTION="${WAIT_ACTION:-attestation}"
+UNCHANGED_COUNT=0
+
+if [[ ! $SECONDS_REQUIRED =~ ^[0-9]+$ ]]; then
+   echo 2>&1 "Error: Seconds required should be a number: ${SECONDS_REQUIRED}" >&2
+   exit 1
+fi
+
+case ${WAIT_ACTION} in
+   attestation|proposal) ;;
+   *) echo 2>&1 "Error: Unknown wait action: ${WAIT_ACTION}" >&2; exit 1 ;;
+esac
+
+echo "Seconds required: ${SECONDS_REQUIRED}"
+echo "Querying: ${METRICS_ADDR}"
+echo "Waiting for: ${WAIT_ACTION} action"
+while true; do
+    case ${WAIT_ACTION} in
+        attestation)
+            SECONDS_LEFT=$(getNextActionWait) ;;
+        proposal)
+            SECONDS_LEFT=$(getNextProposalWait) ;;
+    esac
+
+    # For dots to indicate querying
+    if [[ "${SECONDS_LEFT}" == "${SECONDS_OLD}" ]]; then
+        ((UNCHANGED_COUNT+=1))
+    else
+        UNCHANGED_COUNT=0
+    fi
+    echo -en "\r\e[KNext ${WAIT_ACTION} action in: ${SECONDS_LEFT}s$(dots "${UNCHANGED_COUNT}")"
+    if [[ "${SECONDS_LEFT}" == 'inf' || "${SECONDS_LEFT}" -gt "${SECONDS_REQUIRED}" ]]; then
+        echo -e "\nRestarting: ${SERVICE}"
+        sudo systemctl restart "${SERVICE}"
+        break
+    fi
+    SECONDS_OLD="${SECONDS_LEFT}"
+    sleep "${INTERVAL_SECONDS}"
+done

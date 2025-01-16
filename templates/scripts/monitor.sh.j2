@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# vim: set ft=sh:
+# Script that updates Consul service metadata.
+
+CONSUL_SERVICE_FILE='/etc/consul/service_{{ light_client_consul_service_file_name }}.json'
+
+# Not pretty and will break. Wish we had --version-json.
+function get_spec()     { echo "${BN_VERSION}" | grep 'specification' | cut -d' ' -f3; }
+function get_version()  { echo "${BN_VERSION}" | grep 'beacon node'   | cut -d' ' -f4; }
+function get_compiler() { echo "${BN_VERSION}" | grep 'Compiler'      | cut -d' ' -f4; }
+
+function date_iso8691() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
+
+function update_service_json() {
+    # Uglier but MUCH less effort than using the API.
+    sed "${CONSUL_SERVICE_FILE}" \
+        -e 's#"spec": ".*"#"spec": "'$(get_spec)'"#' \
+        -e 's#"version": ".*"#"version": "'$(get_version)'"#' \
+        -e 's#"compiler": ".*"#"compiler": "'$(get_compiler)'"#' \
+        | sponge "${CONSUL_SERVICE_FILE}"
+}
+
+function update_service_timestamp() {
+    sed "${CONSUL_SERVICE_FILE}" \
+        -e 's#"timestamp": ".*"#"timestamp": "'$(date_iso8691)'"#' \
+        | sponge "${CONSUL_SERVICE_FILE}"
+}
+
+function update_consul() {
+    BEFORE=$(md5sum "${CONSUL_SERVICE_FILE}")
+    update_service_json
+    AFTER=$(md5sum "${CONSUL_SERVICE_FILE}")
+    # Avoid unnecessary reloads.
+    [[ "${BEFORE}" == "${AFTER}" ]] && return 1 || return 0
+}
+
+function reload_consul() {
+    echo "Changes detected, reloading Consul."
+    systemctl reload consul
+}
+
+BN_VERSION=$({{ light_client_binary_path }} --version)
+update_consul \
+    && { update_service_timestamp; reload_consul; } \
+    || echo 'No changes detected.'

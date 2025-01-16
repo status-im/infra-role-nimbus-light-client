@@ -1,0 +1,30 @@
+---
+- name: Clone repo branch
+  git:
+    repo: '{{ light_client_repo_url }}'
+    version: '{{ light_client_repo_branch }}'
+    dest: '{{ light_client_repo_path }}'
+    force: true
+    update: true
+  become_user: '{{ light_client_user }}'
+
+- name: Check if node binary exists
+  stat:
+    path: '{{ light_client_bin_path }}/nimbus_light_client'
+  register: light_client_bin
+
+- name: Create timer for build script
+  include_role: name=infra-role-systemd-timer
+  vars:
+    systemd_timer_name:               '{{ light_client_build_timer_name }}'
+    systemd_timer_description:        'build {{ light_client_service_name }}'
+    systemd_timer_user:               '{{ light_client_user }}'
+    systemd_timer_group:              '{{ light_client_group }}'
+    systemd_timer_start_on_creation:  '{{ not light_client_bin.stat.exists }}'
+    systemd_timer_ionice_class:       'idle'
+    systemd_timer_consul_warning:     true
+    systemd_timer_enabled:            '{{ light_client_build_timer_enabled }}'
+    systemd_timer_frequency:          '{{ light_client_build_frequency }}'
+    systemd_timer_timeout_sec:        '{{ light_client_build_timer_timeout }}'
+    systemd_timer_work_dir:           '{{ light_client_service_path }}'
+    systemd_timer_script_path:        '{{ light_client_build_script }}'

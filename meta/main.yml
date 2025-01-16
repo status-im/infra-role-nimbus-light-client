@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: Jakub Sokołowski <jakub@status.im>
+  description: Build and run nimbus light client
+  company: Status.im
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+  dependencies:
+    - name: infra-role-consul-service
+      src: git+git@github.com:status-im/infra-role-consul-service.git
+      scm: git
+    - name: infra-role-systemd-timer
+      src: git+git@github.com:status-im/infra-role-systemd-timer.git
+      scm: git

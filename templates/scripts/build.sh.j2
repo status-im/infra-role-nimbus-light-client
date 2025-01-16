@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# vim: ft=sh
+set -e
+
+function headIsDetached() {
+    [[ $(git rev-parse --abbrev-ref --symbolic-full-name HEAD) == "HEAD" ]];
+}
+
+function binaryExists() {
+    ls -l build/nimbus_light_client_${COMMIT} 2>&1 1>/dev/null
+}
+
+function fetchChanges() {
+    # We cannot use "git pull" in here, because history may be changed upstream
+    git fetch
+    git reset --hard "origin/${BRANCH}"
+}
+
+function buildBinaries() {
+    # Control number of jobs used to lower impact on running nodes
+    export MAKEFLAGS="-j{{ light_client_update_build_jobs | int }}"
+{% if light_client_nim_commit is defined and light_client_nim_commit != "" %}
+    export NIM_COMMIT={{ light_client_nim_commit }}
+{% endif %}
+
+    make update OVERRIDE=1
+    make {{ light_client_update_build_targets | join(" ") }} \
+        LOG_LEVEL="{{ light_client_update_build_log_level }}" \
+        NIMFLAGS="{{ light_client_update_build_nim_flags }}"
+
+    # Rename binaries to match commit they were built from.
+    mv "build/nimbus_light_client" "build/nimbus_light_client_${COMMIT}"
+
+    # Create a symbolic link to the latest version
+    ln -vfrs build/nimbus_light_client_${COMMIT} {{ light_client_bin_path }}/nimbus_light_client
+
+    # Delete copies that are older than N days
+    find build -mtime +{{ light_client_build_days_kept }} -exec rm '{}' \+
+}
+
+#-------------------------------------------------------------------------------
+
+BRANCH="{{ light_client_repo_branch }}"
+SERVICE="{{ light_client_service_name }}.service"
+SERVICE_PATH="{{ light_client_service_path }}"
+
+echo " >>> Build Start: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+cd "${SERVICE_PATH}"
+
+if [[ "${USER}" != "{{ light_client_user }}" ]]; then
+    echo "Incorrect user: ${USER}" >&2
+    echo "Expected: {{ light_client_user }}" >&2
+    exit 1
+fi
+
+# Build the Beacon node binaries
+pushd repo >/dev/null
+
+# Detached HEAD means we're probably on a tag
+if headIsDetached; then
+    echo " >>> Deatached HEAD, nothing to fetch."
+else
+    echo " >>> Fetching changes..."
+    fetchChanges
+fi
+
+COMMIT=$(git rev-parse --short=8 HEAD)
+
+if binaryExists && [[ "$1" != "--force" ]]; then
+    echo " >>> Binary already built"
+    exit 0
+else
+    echo " >>> Building binaries..."
+    buildBinaries
+fi
+
+{% if light_client_build_restarts_service %}
+# Avoid failure on first Ansible run due to missing service.
+if [[ $(systemctl is-enabled "${SERVICE}" || true) != "enabled" ]]; then
+    echo " !!! No service to restart!"
+    exit
+else
+    echo " >>> Restarting service..."
+    sudo systemctl restart "${SERVICE}"
+fi
+
+{% endif %}
+popd >/dev/null
+
+echo " >>> SUCCESS"
