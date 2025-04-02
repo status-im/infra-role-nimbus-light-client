@@ -45,7 +45,7 @@ light_client_log_format: 'json' # auto colors nocolors json none
 light_client_extra_flags: {} # {agent-string: 'Taxation is theft.'}
 
 # For validation
-light_client_valid_network_names: ["mainnet", "prater", "sepolia", "holesky"]
+light_client_valid_network_names: ["mainnet", "prater", "sepolia", "holesky", "hoodi"]
 
 # connectivity settings
 light_client_public_address: '{{ ansible_host }}'
