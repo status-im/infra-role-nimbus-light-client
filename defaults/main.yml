@@ -52,6 +52,7 @@ light_client_public_address: '{{ ansible_host }}'
 light_client_max_peers: 160
 light_client_discovery_port: 9503
 light_client_listening_port: 9503
+light_client_quic_port: 9504
 
 # REST API
 local_beacon_node_rest_port: 9303

@@ -17,6 +17,7 @@ log-level = {{ light_client_log_level | to_json }}
 nat = "extip:{{ light_client_public_address }}"
 tcp-port = {{ light_client_listening_port }}
 udp-port = {{ light_client_discovery_port }}
+quic-port = {{ light_client_quic_port }}
 max-peers = {{ light_client_max_peers }}
 
 ### Extra Flags
