@@ -9,7 +9,6 @@
   with_items:
     - { path: '{{ light_client_service_path }}',    mode: '0750' }
     - { path: '{{ light_client_config_dir }}',      mode: '0755' }
-    - { path: '{{ light_client_bin_path }}',        mode: '0755' }
 
 - name: Copy Ansible toggle script
   copy:
@@ -28,6 +27,14 @@
     mode:    0775
   with_fileglob:
     - 'templates/scripts/*'
+
+- name: Install check-commit-lc to /usr/bin
+  copy:
+    src:   'check-commit-lc.sh'
+    dest:  '/usr/bin/check-commit-lc'
+    owner: 'root'
+    group: 'root'
+    mode:  '0755'
 
 - name: Create node config
   template:

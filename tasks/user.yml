@@ -5,13 +5,6 @@
     group: '{{ light_client_group }}'
     shell: '/bin/bash'
 
-- name: Set disable rebase as merge strategy
-  git_config:
-    scope: 'global'
-    name: 'pull.rebase'
-    value: 'false'
-  become_user: '{{ light_client_user }}'
-
 - name: Sudoers file to let non-root users start jobs
   template:
     src: 'update_sudoers.j2'

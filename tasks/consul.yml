@@ -21,3 +21,14 @@
           - id:   '{{ light_client_service_name }}-health'
             type: 'tcp'
             tcp: 'localhost:{{ light_client_listening_port }}'
+          - id:   '{{ light_client_service_name }}-commit-freshness'
+            type: 'script'
+            script: >-
+              check-commit-lc
+              -r {{ light_client_repo_url.split('/')[-2:] | join('/') }}
+              -b {{ light_client_repo_branch }}
+              -m {{ light_client_metrics_port }}
+              -w {{ light_client_consul_commit_warn_age }}
+              -c {{ light_client_consul_commit_crit_age }}
+            interval: '30m'
+            timeout: '30s'

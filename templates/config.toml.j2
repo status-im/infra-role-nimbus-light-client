@@ -20,4 +20,9 @@ udp-port = {{ light_client_discovery_port }}
 quic-port = {{ light_client_quic_port }}
 max-peers = {{ light_client_max_peers }}
 
+### Metrics
+metrics = {{ light_client_metrics_enable | to_json }}
+metrics-address = "{{ light_client_metrics_address }}"
+metrics-port = {{ light_client_metrics_port }}
+
 ### Extra Flags

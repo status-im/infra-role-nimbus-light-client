@@ -5,7 +5,7 @@ light_client_service_path: '/data/{{ light_client_service_name }}'
 light_client_config_dir: '{{ light_client_service_path }}/conf'
 light_client_config_file_path: '{{ light_client_config_dir }}/config.toml'
 light_client_repo_path: '{{ light_client_service_path }}/repo'
-light_client_bin_path: '{{ light_client_service_path }}/bin'
+light_client_bin_path: '{{ light_client_service_path }}/result/bin'
 light_client_logs_link: '{{ light_client_service_path }}/logs'
 light_client_binary_path: '{{ light_client_bin_path }}/nimbus_light_client'
 
@@ -20,20 +20,11 @@ light_client_service_nofile_limit: 16384
 light_client_user: 'nimbus'
 light_client_group: 'staff'
 
-light_client_build_timer_name: 'build-{{ light_client_service_name }}'
-light_client_build_timer_enabled: true
-light_client_build_timer_timeout: 3600
-light_client_build_frequency: 'weekly'
-light_client_build_restarts_service: false # avoid on the first run
-
-# Update with Build method
-light_client_build_script: '{{ light_client_service_path }}/build.sh'
-light_client_update_build_targets: ['nimbus_light_client']
-light_client_build_days_kept: 3
-light_client_update_build_jobs: '{{ ansible_processor_vcpus / 2 | round(0, "ceil") }}'
-light_client_update_build_log_level: 'INFO'
-light_client_update_build_nim_flags: >-
-  -d:noSignalHandler
+light_client_update_timer_name: 'update-{{ light_client_service_name }}'
+light_client_update_timer_enabled: true
+light_client_update_timer_timeout: 3600
+light_client_update_frequency: 'weekly'
+light_client_update_restarts_service: false # avoid on the first run
 
 light_client_repo_url: 'https://github.com/status-im/nimbus-eth2'
 light_client_repo_branch: 'unstable'
@@ -57,6 +48,11 @@ light_client_quic_port: 9504
 # REST API
 local_beacon_node_rest_port: 9303
 
+# Metrics
+light_client_metrics_enable: true
+light_client_metrics_address: '0.0.0.0'
+light_client_metrics_port: 9603
+
 # Consul service definition settings
 light_client_consul_service_name: 'nimbus-light-client'
 light_client_consul_service_file_name: '{{ light_client_service_name | replace("-", "_") }}'
@@ -75,6 +71,9 @@ light_client_consul_failures_before_critical: 2
 # Netkey file contents, optional.
 #light_client_netkey: '{"key":"json"}'
 
-# Which version of Nim to use for the build
-# By default, it would use the one specified by the pinned nimbus-build-system
-light_client_nim_commit: ''
+# Commit drift check
+light_client_consul_commit_warn_age: 86400 # seconds = 1day
+light_client_consul_commit_crit_age: 172800 # seconds = 2 days
+
+# Nix
+light_client_nix_flake_target: 'light_client'

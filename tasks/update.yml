@@ -1,0 +1,25 @@
+---
+- name: Check if node binary exists
+  stat:
+    path: '{{ light_client_bin_path }}/nimbus_light_client'
+  register: light_client_bin
+
+- name: Create timer for Light client update
+  include_role: name=infra-role-systemd-timer
+  vars:
+    systemd_timer_name:               '{{ light_client_update_timer_name }}'
+    systemd_timer_description:        'Update {{ light_client_service_name }}'
+    systemd_timer_user:               '{{ light_client_user }}'
+    systemd_timer_group:              '{{ light_client_group }}'
+    systemd_timer_start_on_creation:  '{{ not light_client_bin.stat.exists }}'
+    systemd_timer_ionice_class:       'idle'
+    systemd_timer_consul_warning:     true
+    systemd_timer_enabled:            '{{ light_client_update_timer_enabled }}'
+    systemd_timer_frequency:          '{{ light_client_update_frequency }}'
+    systemd_timer_timeout_sec:        '{{ light_client_update_timer_timeout }}'
+    systemd_timer_work_dir:           '{{ light_client_service_path }}'
+    systemd_timer_script_path:        '/nix/var/nix/profiles/default/bin/nix'
+    systemd_timer_script_args: |-
+      build --no-write-lock-file --fallback --refresh "git+{{ light_client_repo_url }}?submodules=1&ref={{ light_client_repo_branch }}#{{ light_client_nix_flake_target }}"
+    systemd_timer_exec_start_post:
+      - '+/bin/systemctl restart {{ light_client_service_name }}.service'
