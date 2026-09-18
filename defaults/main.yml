@@ -68,8 +68,10 @@ light_client_consul_failures_before_critical: 2
 # light_client_consul_monitor_name: 'monitor-{{ light_client_service_name }}'
 # light_client_consul_monitor_user: 'root'
 
-# Netkey file contents, optional.
-#light_client_netkey: '{"key":"json"}'
+# WebSocket or HTTP URLs for execution layet Engine API
+light_client_exec_layer_urls: []
+#light_client_exec_layer_jwt_secret: ~
+light_client_exec_layer_jwt_secret_path: '{{ light_client_service_path }}/jwt.hex'
 
 # Commit drift check
 light_client_consul_commit_warn_age: 86400 # seconds = 1day

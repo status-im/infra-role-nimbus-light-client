@@ -10,6 +10,15 @@
     - { path: '{{ light_client_service_path }}',    mode: '0750' }
     - { path: '{{ light_client_config_dir }}',      mode: '0755' }
 
+- name: Create JWT secret file (optional)
+  when: light_client_exec_layer_jwt_secret is defined
+  copy:
+    dest:    '{{ light_client_exec_layer_jwt_secret_path }}'
+    content: '{{ light_client_exec_layer_jwt_secret }}'
+    owner:   '{{ light_client_user }}'
+    group:   '{{ light_client_group }}'
+    mode:    0400
+
 - name: Copy Ansible toggle script
   copy:
     src:     'ansible_toggle.sh'

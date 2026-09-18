@@ -20,9 +20,19 @@ udp-port = {{ light_client_discovery_port }}
 quic-port = {{ light_client_quic_port }}
 max-peers = {{ light_client_max_peers }}
 
+### Exec Layer
+{% if light_client_exec_layer_urls is defined and light_client_exec_layer_urls | length > 0 %}
+el = [
+{% for url in light_client_exec_layer_urls %}  {{ url | to_json }},
+{% endfor %}]
+{% endif %}
+
+### Security
+{% if light_client_exec_layer_jwt_secret is defined %}
+jwt-secret = {{ light_client_exec_layer_jwt_secret_path | mandatory | to_json }}
+{% endif %}
+
 ### Metrics
 metrics = {{ light_client_metrics_enable | to_json }}
 metrics-address = "{{ light_client_metrics_address }}"
 metrics-port = {{ light_client_metrics_port }}
-
-### Extra Flags
