@@ -32,3 +32,15 @@
               -c {{ light_client_consul_commit_crit_age }}
             interval: '30m'
             timeout: '30s'
+
+      - id: '{{ light_client_service_name }}-metrics'
+        name: '{{ light_client_consul_metrics_service_name }}'
+        port: '{{ light_client_metrics_port }}'
+        address: '{{ ansible_local.wireguard.vpn_ip }}'
+        tags: ['{{ env }}.{{ stage }}', 'light-client', 'nimbus', 'metrics']
+        meta:
+          container: '{{ light_client_service_name }}'
+        checks:
+          - id: '{{ light_client_service_name }}-metrics-health'
+            type: 'http'
+            http: 'http://localhost:{{ light_client_metrics_port }}/health'
